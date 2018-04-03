@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# encoding: utf-8
 
 import sys
 import re
@@ -11,7 +12,8 @@ def checkUrlReq(url):
     Returns:
         True / False
     """
-    ReqFileTypes = ('.png', '.jpeg', '.bmp', '.jpg', '.js', '.css')
+    ReqFileTypes = ('.png', '.jpeg', '.bmp', '.jpg', '.js', '.css', '.swf',
+                    '.gif')
 
     url = url.strip()
 
@@ -22,6 +24,20 @@ def checkUrlReq(url):
             continue
 
     return False
+
+
+def matchUrl(url):
+    # 要处理 /.../index.php/controller/action/paramer/data ...
+    pattern = re.compile(r".*/.*\.php\/*\w*\/*\w*")
+
+    data = pattern.match(url)
+
+    if data:
+        tmpurl = data.group()
+    else:
+        tmpurl = None
+
+    return tmpurl
 
 
 def cleansUrl(url):
@@ -41,18 +57,13 @@ def cleansUrl(url):
     if checkUrlReq(url) is True:
         pass
     elif "?" in url:
-
-        # /Invite/?Vid=105&Aid=103&MoCode=460060766536
-        pos = url.index("?")
-
-        res = url[:pos]
-
+        pos = url.find("?")
+        if ".php" in url:
+            res = matchUrl(url[:pos])
+        else:
+            res = url[:pos]
     elif ".php" in url:
-        # 要处理 /.../index.php/controller/action/paramer/data ...
-        pattern = re.compile(r".*/.*\.php/\w+/\w+")
-
-        res = pattern.findall(url)
-
+        res = matchUrl(url)
     else:
         res = url
 
@@ -70,4 +81,4 @@ if __name__ == "__main__":
 
         urlLink = cleansUrl(words[6])
         if urlLink:
-            print("%s\t%s\t%s" % words[0], urlLink, 1)
+            print("%s\t%s" % (urlLink, 1))
