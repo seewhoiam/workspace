@@ -5,19 +5,24 @@ import re
 
 
 def checkUrlReq(url):
+    """校验是否为文件请求
+    Args:
+        url: 需要校验的url
+    Returns:
+        True / False
     """
-    """
-    ReqFileTypes = ('png', 'jpeg', 'bmp', 'jpg', 'js', 'css')
+    ReqFileTypes = ('.png', '.jpeg', '.bmp', '.jpg', '.js', '.css')
 
     url = url.strip()
 
     for types in ReqFileTypes:
         if types in url:
-            return 1
+            return True
         else:
             continue
 
-    return 0
+    return False
+
 
 def cleansUrl(url):
     '''过滤掉不符合要求的url，去掉url携带的参数。
@@ -31,35 +36,38 @@ def cleansUrl(url):
     Raises:
         列出所有异常
     '''
-    
-    if checkUrlReq(url) == 1:
+    res = None
+
+    if checkUrlReq(url) is True:
         pass
-    
+    elif "?" in url:
 
-for line in open("data.txt"):
+        # /Invite/?Vid=105&Aid=103&MoCode=460060766536
+        pos = url.index("?")
 
-    line = line.strip()
+        res = url[:pos]
 
-    pattern = re.compile(r"[\w\.\/\:\+\&\=\?\-]+")
+    elif ".php" in url:
+        # 要处理 /.../index.php/controller/action/paramer/data ...
+        pattern = re.compile(r".*/.*\.php/\w+/\w+")
 
-    words = pattern.findall(line)
+        res = pattern.findall(url)
 
-    print(cleansUrl(words[6]))
+    else:
+        res = url
 
-    # data format
-    # 127.0.0.1 - - [26/Oct/2017:15:02:57 +0800] "POST /commonApi/service.php/Dispatch/putOn HTTP/1.1" 200 46
-    
-    # print data
-    # if words:
-    #     print("%s\t%s\t%s\t%s\t" %
-    #           (words[0], words[3], words[5], cleansUrl(words[6])))
-    
-    # break   
+    return res
 
 
-    
-    
-    
-    
 if __name__ == "__main__":
-    print("main")
+    for line in sys.stdin:
+
+        feature = line.strip()
+
+        pattern = re.compile(r"[\w\.\/\:\+\&\=\?\-]+")
+
+        words = pattern.findall(feature)
+
+        urlLink = cleansUrl(words[6])
+        if urlLink:
+            print("%s\t%s\t%s" % words[0], urlLink, 1)
